@@ -1,10 +1,23 @@
-import "./globals.css";
+import "server-only";
 
-export default function RootLayout({
+import SupabaseListener from "./(context)/supabase-listener";
+import SupabaseProvider from "./(context)/supabase-provider";
+import "./globals.css";
+import { createClient } from "@/utils/supabase-server";
+
+export const revalidate = 0;
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = createClient();
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
   return (
     <html lang="en">
       {/*
@@ -13,7 +26,12 @@ export default function RootLayout({
       */}
       <head />
 
-      <body>{children}</body>
+      <body>
+        <SupabaseProvider accessToken={session?.access_token}>
+          <SupabaseListener serverAccessToken={session?.access_token} />
+          {children}
+        </SupabaseProvider>
+      </body>
     </html>
   );
 }
